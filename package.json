@@ -2,9 +2,11 @@
   "name": "tkoolsync",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "bin": {
+    "tksync": "index.js"
+  },
   "scripts": {
-    "test": ""
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -15,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/wal-todays/TkoolSync/issues"
   },
-  "homepage": "https://github.com/wal-todays/TkoolSync#readme"
+  "homepage": "https://github.com/wal-todays/TkoolSync#readme",
+  "devDependencies": {
+    "nodegit": "^0.24.0"
+  }
 }

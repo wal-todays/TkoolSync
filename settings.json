@@ -1,0 +1,9 @@
+{
+    "user":{
+        "name":"",
+        "email":"",
+        "token":""
+    },
+    "project-dir":"../project",
+    "remote-repository":""
+}
