@@ -4,7 +4,8 @@ const Fs = require("fs");
 const Git = require("nodegit");
 const Path = require("path");
 
-var settings = JSON.parse(Fs.readFileSync('settings.json','utf8'));
+var userSettings = JSON.parse(Fs.readFileSync('config/user-settings.json','utf8'));
+var settings = JSON.parse(Fs.readFileSync('config/settings.json','utf8'));
 var projectPath = Path.resolve(settings["project-dir"]);
 
 switcher(process.argv);
@@ -38,14 +39,14 @@ function cloning() {
             certificateCheck: function() { return 1; },
             credentials: function() {
                 return Git.Cred.userpassPlaintextNew(
-                    settings["user"]["token"],
+                    userSettings["AccessToken"],
                     "x-oauth-basic"
                 );
             }
         }
     };  
     Git.Clone(
-        settings["remote-repository"],
+        userSettings["remote-repository"],
         localPath,
         cloneOptions
         )
@@ -136,7 +137,7 @@ function addAndCommitting() {
             return repo.getCommit(head);
         })
         .then(function (parent){
-            var author = Git.Signature.now(settings["user"]["name"],settings["user"]["email"]);
+            var author = Git.Signature.now(userSettings["username"],userSettings["email"]);
             var committer = author;
             return repo.createCommit("HEAD", author, committer, "message", oid, [parent]);
         })
@@ -157,7 +158,7 @@ function fetching() {
                     credentials: function(/*url, userName*/){
                         // return Git.Cred.sshKeyFromAgent(userName);
                         return Git.Cred.userpassPlaintextNew(
-                            settings["user"]["token"],
+                            userSettings["AccessToken"],
                             "x-oauth-basic"
                         );
                     }
