@@ -1,15 +1,27 @@
 #!/usr/bin/env node
 
-const Fs = require("fs");
+const FsE = require("fs-extra");
 const Git = require("nodegit");
 const Path = require("path");
 
-var userSettings = JSON.parse(Fs.readFileSync('config/user-settings.json','utf8'));
-var settings = JSON.parse(Fs.readFileSync('config/settings.json','utf8'));
-var projectPath = Path.resolve(settings["project-dir"]);
+try{
+    FsE.statSync("config/user-settings.json");
+} catch(err){
+    if(err.code === "ENOENT"){
+        makeUserSettings();
+    }
+}
+
+
+let userSettings = JSON.parse(FsE.readFileSync('config/user-settings.json','utf8'));
+let settings = JSON.parse(FsE.readFileSync('config/settings.json','utf8'));
+let projectPath = Path.resolve(settings["project-dir"]);
 
 switcher(process.argv);
 
+/**
+ * command switcher
+ */
 function switcher(argv){
     if (argv.slice(2) == 'clone'){
         cloning();
@@ -23,17 +35,49 @@ function switcher(argv){
     else if (argv.slice(2) == 'fetch'){
         fetching();
     } else {
-        console.log(localPath);
+        console.log("HELP");
     }
 }
 
+/**
+ * Make user-settings.json
+ */
+ function makeUserSettings() {
+    const ReadlineSync = require('readline-sync');
+    let username,email,AccessToken,remoteRepository;
+    
+    while (!username){
+        username = ReadlineSync.question('Username <Require>: ');
+    }
+    while (!email){
+        email = ReadlineSync.question('E-mail <Require>: ');
+    }
+    AccessToken = ReadlineSync.question('AccessToken <Option>: ',{
+         hideEchoBack: true
+        });
+    while (!remoteRepository){
+        remoteRepository = ReadlineSync.question('Remote repository URL <Require>: ');
+    }
+    let userSettingsJson = {
+        "username": username,
+        "email": email,
+        "AccessToken": AccessToken,
+        "remote-repository": remoteRepository
+    }
+    FsE.writeJSONSync('./config/user-settings.json', userSettingsJson, {
+        encoding: 'utf-8',
+        replacer: null,
+        spaces: '\t'
+    },function(err){console.log(err)});   
+}
+    
 /**
  * Clone
  */
 function cloning() {
     console.log("cloning...");
-    var localPath = Path.join(__dirname, settings["project-dir"]);
-    var cloneOptions = {};
+    let localPath = Path.join(__dirname, settings["project-dir"]);
+    let cloneOptions = {};
     cloneOptions.fetchOpts = {
         callbacks: {
             certificateCheck: function() { return 1; },
@@ -44,21 +88,20 @@ function cloning() {
                 );
             }
         }
-    };  
+    };
     Git.Clone(
         userSettings["remote-repository"],
         localPath,
         cloneOptions
-        )
-        .catch(errorAndAttemptOpen)
-        .then(function (repository) {
-            if (repository.isBare() == "false"){
-                console.log("cloning completed!")
+        ).then(function (repository) {
+            if (repository.isBare() == 0){
+                console.log("cloning completed!");
             }
-        });
+        }).catch(errorAndAttemptOpen);
 }
 //Handling clone failure
 var errorAndAttemptOpen = function(){
+    console.log("Some error occurred.")
     return Git.Repository.open(localPath);
 }
 
@@ -75,10 +118,10 @@ function viewlog() {
     // Display information about commits on master.
     .then(function(firstCommitOnMaster) {
         // Create a new history event emitter.
-        var history = firstCommitOnMaster.history();
+        let history = firstCommitOnMaster.history();
 
         // Create a counter to only show up to 9 entries.
-        var count = 0;
+        let count = 0;
 
         // Listen for commit events from the history.
         history.on("commit", function(commit) {
@@ -91,7 +134,7 @@ function viewlog() {
             console.log("commit " + commit.sha());
 
             // Store the author object.
-            var author = commit.author();
+            let author = commit.author();
 
             // Display author information.
             console.log("Author:\t" + author.name() + " <" + author.email() + ">");
@@ -137,13 +180,13 @@ function addAndCommitting() {
             return repo.getCommit(head);
         })
         .then(function (parent){
-            var author = Git.Signature.now(userSettings["username"],userSettings["email"]);
-            var committer = author;
+            let author = Git.Signature.now(userSettings["username"],userSettings["email"]);
+            let committer = author;
             return repo.createCommit("HEAD", author, committer, "message", oid, [parent]);
         })
         .done(function(commitId){
             console.log("New Commit: ",commitId);
-            console.log("committing completed!")
+            console.log("committing completed!");
         });
 }
 
@@ -165,7 +208,7 @@ function fetching() {
                 }
             });
         }).done(function(){
-            console.log("fetching completed!")
+            console.log("fetching completed!");
         });
 }
 
