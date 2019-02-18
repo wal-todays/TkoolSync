@@ -35,7 +35,8 @@ function switcher(argv){
     else if (argv.slice(2) == 'fetch'){
         fetching();
     } else {
-        console.log("HELP");
+        console.log(
+            "tksync (clone|log|commit|fetch)");
     }
 }
 
