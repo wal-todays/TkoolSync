@@ -32,11 +32,18 @@ function switcher(argv){
     else if (argv.slice(2) == 'commit'){
         addAndCommitting();
     }
+    // else if (argv.slice(2) == 'pull'){
+    //     pulling();
+    // }
     else if (argv.slice(2) == 'fetch'){
         fetching();
-    } else {
+    }
+    else if (argv.slice(2) == 'diff'){
+        getDiff();
+    }
+    else {
         console.log(
-            "tksync (clone|log|commit|fetch)");
+            "tksync (clone|log|commit|diff|fetch)");
     }
 }
 
@@ -94,11 +101,13 @@ function cloning() {
         userSettings["remote-repository"],
         localPath,
         cloneOptions
-        ).then(function (repository) {
+        )
+        .catch(errorAndAttemptOpen)
+        .then(function (repository) {
             if (repository.isBare() == 0){
                 console.log("cloning completed!");
             }
-        }).catch(errorAndAttemptOpen);
+        });
 }
 //Handling clone failure
 var errorAndAttemptOpen = function(){
@@ -156,6 +165,7 @@ function viewlog() {
  * Add and Commit
  */
 function addAndCommitting() {
+    let repo,index,oid;
     Git.Repository.open(projectPath)
         .then(function (repoResult) {
             repo = repoResult;
@@ -192,6 +202,38 @@ function addAndCommitting() {
 }
 
 /**
+ * pull
+ */
+// function pulling() {
+//     let repo;
+//     Git.Repository.open(projectPath)
+//         .then(function (repository) {
+//             repo = repository;
+//             return repo.fetchAll({
+//                 callbacks: {
+//                     credentials: function(){
+//                         return Git.Cred.userpassPlaintextNew(
+//                             userSettings["AccessToken"],
+//                             "x-oauth-basic"
+//                         );
+//                     }
+//                 },
+//                 certificateCheck: function(){return 1}
+//             });
+//         }).then(function () {
+//             return repo.mergeBranches("master","origin/master");
+//         }).then(function (index) {
+//             console.log(index.conflictGet(projectPath));
+//             if(index.hasConflicts()){
+//                 console.log("Conflict has occurred!");
+//             }
+//         })
+//         /*.done(function () {
+//             console.log("pulling completed!");
+//         })*/;
+// }
+
+/**
  * fetch
  */
 function fetching() {
@@ -211,6 +253,23 @@ function fetching() {
         }).done(function(){
             console.log("fetching completed!");
         });
+}
+
+/**
+ * Diff
+ */
+function getDiff() {
+    Git.Repository.open(projectPath)
+        .then(function (repo) {
+            return repo.getHeadCommit();
+        })
+        .then(function (commit) {
+            console.log("commit "+commit.sha());
+            console.log("Author:"+commit.author.name()+" <"+commit.author.email()+">");
+            console.log("Date:",commit.date());
+            console.log("\n\t"+commit.message());
+            return commit.getDiff();
+        })
 }
 
 /**
