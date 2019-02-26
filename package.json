@@ -19,7 +19,9 @@
   },
   "homepage": "https://github.com/wal-todays/TkoolSync#readme",
   "devDependencies": {
-    "nodegit": "^0.24.0",
-    "readline-sync": "^1.4.9"
+    "fs-extra": "^7.0.1",
+    "git-json-merge": "^0.4.4",
+    "readline-sync": "^1.4.9",
+    "simple-git": "^1.107.0"
   }
 }
